@@ -5,6 +5,8 @@ from sklearn.metrics import silhouette_samples,silhouette_score
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.interpolate import interp1d as interp
+
 
 def plot_roc(labels_,Y_pred_, n_classes, title,  fig_name):
   # Credit: https://www.dlology.com/blog/simple-guide-on-how-to-generate-roc-plot-for-keras-classifier/

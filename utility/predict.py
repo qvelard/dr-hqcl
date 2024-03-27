@@ -23,6 +23,7 @@ def get_accuracy( data_loder, device, model ):
     return test_accuracy, y_pred, y_pred_2
 
 def train_model(model, lossFunction, optimizer, scheduler, train_loader, test_loader, num_epochs, validation=True, regularize=True):
+    device = nn.device("cuda" if nn.cuda.is_available() else "cpu")
     train_loss_history = []
     train_acc_history = []
     val_loss_history = []
@@ -69,7 +70,7 @@ def train_model(model, lossFunction, optimizer, scheduler, train_loader, test_lo
             val_correct = 0
             val_total = 0
 
-            with torch.no_grad():
+            with nn.no_grad():
                 for inputs, labels in test_loader:  # Assuming you have a data loader for validation
                     inputs = inputs.to(device)
                     labels = labels.to(device)

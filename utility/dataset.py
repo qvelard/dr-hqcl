@@ -12,10 +12,11 @@ from torch.utils.data import DataLoader, SubsetRandomSampler, Dataset
 from medmnist import INFO
 from sklearn.preprocessing import StandardScaler
 
+
 def load_dataset( input_shape, batch_size, data_dir, data_transforms ):
     image_datasets = {
     x if x == "train" else "val": datasets.ImageFolder(
-        os.path.join(data_dir, x), data_transforms[x]
+        os.path.join(data_dir, x), data_transforms
     )
     for x in ["train", "val"]
     }
@@ -41,6 +42,8 @@ def load_dataset( input_shape, batch_size, data_dir, data_transforms ):
     print("Testing datset size: " + str(len(test_dataset)))
 
     return train_dataset, test_dataset, train_loader, test_loader, dataset_sizes, class_names, y_train, y_test
+
+
 
 def get_stats(train_loader, input_shape):
     # https://kozodoi.me/blog/20210308/compute-image-stats
@@ -100,8 +103,8 @@ class SmallDataset(Dataset):
 
     def _get_class_indices(self):
         class_indices = {}
-        for idx, (_, label_arr) in enumerate(self.dataset):
-            label = label_arr[0]
+        for idx, (_, label) in enumerate(self.dataset):
+            
             if label not in class_indices:
                 class_indices[label] = []
             class_indices[label].append(idx)
@@ -120,11 +123,10 @@ class SmallDataset(Dataset):
 def create_small_dataset( samples_per_class, dataset, batch_size ):
     # Get the indices of samples for each class
     class_indices = {}
-    for idx, (_, label_arr) in enumerate(dataset):
-        label = label_arr[0]
-        if label not in class_indices:
-            class_indices[label] = []
-        class_indices[label].append(idx)
+    for idx, (_, label) in enumerate(dataset):
+        if label.item() not in class_indices:
+            class_indices[label.item()] = []
+        class_indices[label.item()].append(idx)
 
     # Select 20 samples from each class
     selected_indices = []
@@ -135,6 +137,21 @@ def create_small_dataset( samples_per_class, dataset, batch_size ):
     sampler = SubsetRandomSampler(selected_indices)
 
     # Create a new data loader with the custom sampler
+    return DataLoader(dataset, batch_size=batch_size, sampler=sampler)
+
+def create_small_dataset_integer(samples_per_class, dataset, batch_size):
+    class_indices = {}
+    for idx, (_, label) in enumerate(dataset):
+        if label not in class_indices:
+            class_indices[label] = []
+        class_indices[label].append(idx)
+
+    selected_indices = []
+    for label, indices in class_indices.items():
+        selected_indices.extend(indices[:samples_per_class])
+
+    sampler = SubsetRandomSampler(selected_indices)
+
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler)
 
 def get_data_class(data_flag):
