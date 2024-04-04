@@ -20,8 +20,8 @@ from qiskit_machine_learning.circuit.library import QNNCircuit
 from qiskit_machine_learning.exceptions import QiskitMachineLearningError
 import qiskit_machine_learning.optionals as _optionals
 
-from .neural_network import NeuralNetwork
-
+from qiskit_machine_learning.neural_networks.neural_network import NeuralNetwork
+from qiskit_machine_learning.neural_networks.sampler_qnn import SamplerQNN
 if _optionals.HAS_SPARSE:
     # pylint: disable=import-error
     from sparse import SparseArray
@@ -124,7 +124,7 @@ class Frozen(SamplerQNN):
             circuit = circuit.copy()
             circuit.measure_all()
         self._circuit = self._reparameterize_circuit(circuit, input_params, weight_params)
-        
+
     def _backward(
         self,
         input_data: np.ndarray | None,
