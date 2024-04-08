@@ -12,9 +12,10 @@ from qiskit_machine_learning.utils import  derive_num_qubits_feature_map_ansatz
 from typing import Callable
 from qiskit_machine_learning.algorithms.classifiers import VQC
 from utility.froze import FrozenQNN   
+from qiskit_machine_learning.algorithms.classifiers.neural_network_classifier import NeuralNetworkClassifier
 
 
-class ExtendedVQC(VQC):
+class ExtendedVQC(NeuralNetworkClassifier):
     def __init__(
         self,
         num_qubits: int | None = None,
@@ -50,4 +51,61 @@ class ExtendedVQC(VQC):
             output_shape=2,
             input_gradients=False,
         )
+
+        super().__init__(
+            neural_network=neural_network,
+            loss=loss,
+            one_hot=True,
+            optimizer=optimizer,
+            warm_start=warm_start,
+            initial_point=initial_point,
+            callback=callback,
+        )
+
+    @property
+    def feature_map(self) -> QuantumCircuit:
+        """Returns the used feature map."""
+        return self._feature_map
+
+    @property
+    def ansatz(self) -> QuantumCircuit:
+        """Returns the used ansatz."""
+        return self._ansatz
+
+    @property
+    def circuit(self) -> QuantumCircuit:
+        """Returns the underlying quantum circuit."""
+        return self._circuit
+
+    @property
+    def num_qubits(self) -> int:
+        """Returns the number of qubits used by ansatz and feature map."""
+        return self.circuit.num_qubits
+
+    def _fit_internal(self, X: np.ndarray, y: np.ndarray) -> OptimizerResult:
+        """
+        Fit the model to data matrix X and targets y.
+
+        Args:
+            X: The input feature values.
+            y: The input target values. Required to be one-hot encoded.
+
+        Returns:
+            Trained classifier.
+        """
+        X, y = self._validate_input(X, y)
+        num_classes = self._num_classes
+
+        # instance check required by mypy (alternative to cast)
+        if isinstance(self._neural_network, SamplerQNN):
+            self._neural_network.set_interpret(self._get_interpret(num_classes), num_classes)
+
+        function = self._create_objective(X, y)
+        return self._minimize(function)
+
+    def _get_interpret(self, num_classes: int):
+        def parity(x: int, num_classes: int = num_classes) -> int:
+            return x % num_classes
+
+        return parity
 

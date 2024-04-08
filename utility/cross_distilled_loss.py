@@ -66,4 +66,3 @@ class CrossDistilledLoss(Loss):
         gradient = self.alpha * ce_gradient + (1 - self.alpha) * kl_gradient
           
         return gradient
-
